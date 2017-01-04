@@ -101,32 +101,4 @@
         </dependencies>
     </dependencyManagement>
 
-    <profiles>
-        <profile>
-            <id>pitest</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>pitest-maven</artifactId>
-                        <groupId>org.pitest</groupId>
-                        <version>1.1.11</version>
-                        <executions>
-                            <execution>
-                                <id>mutation testing</id>
-                                <goals>
-                                    <goal>mutationCoverage</goal>
-                                </goals>
-                                <phase>test</phase>
-                                <configuration>
-                                    <failWhenNoMutations>false</failWhenNoMutations>
-                                    <timestampedReports>false</timestampedReports>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
-
 </project>
