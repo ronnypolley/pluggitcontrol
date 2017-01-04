@@ -6,6 +6,7 @@ import org.hamcrest.Matchers;
 import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -23,6 +24,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
  *
  * @author Ronny Polley
  */
+@Disabled("Need refactoring to be an actual test")
 public class ConnectionTest {
 
     private Connection connection;
