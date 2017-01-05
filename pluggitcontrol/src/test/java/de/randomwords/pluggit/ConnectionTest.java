@@ -2,58 +2,103 @@ package de.randomwords.pluggit;
 
 import de.randomwords.pluggit.enums.AlarmType;
 import de.randomwords.pluggit.enums.OperationMode;
+import de.randomwords.pluggit.exception.PluggitControlException;
 import org.hamcrest.Matchers;
 import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.mockito.*;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import java.io.IOException;
-import java.net.InetAddress;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.*;
 
 /**
  * Created by Ronny Polley on 09.12.2016.
  *
  * @author Ronny Polley
  */
-@Disabled("Need refactoring to be an actual test")
 public class ConnectionTest {
 
-    private Connection connection;
+    @Spy
+    @InjectMocks
+    private Connection connection = new Connection();
+
+    @Mock(answer = Answers.RETURNS_DEEP_STUBS)
+    private Socket socket;
+
+    @Mock
+    private OutputStream outputStream;
+
+    @Mock
+    private InputStream inputStream;
+
+    private InetSocketAddress pluggitAddress = new InetSocketAddress("pluggit", 502);
+    private byte transActionId2, transActionId1;
+    private byte payloadLength;
 
     @BeforeEach
     public void setUp() throws IOException {
-        connection = new Connection();
-        connection.connect(new InetSocketAddress("192.168.178.25", 502));
+        MockitoAnnotations.initMocks(this);
+        connection.connect(pluggitAddress);
+        verify(socket, times(1)).connect(pluggitAddress);
+
+        when(socket.getOutputStream()).thenReturn(outputStream);
+        when(socket.getInputStream()).thenReturn(inputStream);
+
+        doAnswer(new Answer() {
+            @Override
+            public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
+                byte[] bytes = invocationOnMock.getArgumentAt(0, byte[].class);
+                transActionId1 = bytes[0];
+                transActionId2 = bytes[1];
+                return null;
+            }
+        }).when(outputStream).write(any(byte[].class), anyInt(), anyInt());
+
+        when(inputStream.read(any(byte[].class), eq(0), eq(8))).then(new Answer<Integer>() {
+            @Override
+            public Integer answer(InvocationOnMock invocationOnMock) throws Throwable {
+                byte[] bytes = invocationOnMock.getArgumentAt(0, byte[].class);
+                bytes[0] = transActionId1;
+                bytes[1] = transActionId2;
+                // length of payload
+                bytes[5] = payloadLength;
+                return null;
+            }
+        });
     }
 
     @AfterEach
-    public void tearDown() throws IOException {
-        connection.disconnect();
+    void tearDown() {
+        reset(socket);
+
     }
 
     @Test
-    public void testConnection() throws IOException {
-        Connection connection = new Connection();
-        connection.connect(new InetSocketAddress("192.168.178.25", 502));
-        assertThat(connection.getIPAddress(), IsNull.notNullValue());
-        connection.disconnect();
+    public void testIpAddress_NoPayload() throws Exception {
+        Throwable throwable = assertThrows(PluggitControlException.class, () -> {
+            connection.getIPAddress();
+        });
+        assertThat(throwable.getMessage(), equalTo("error getting ip address from pluggit"));
+        assertThat(throwable.getCause().getMessage(), equalTo("Not all data needed was retrieved"));
+        //        assertThat(ipAddress, equalTo(InetAddress.getByAddress(new byte[]{(byte) 192, (byte) 168, (byte) 178, 25})));
+        //        System.out.println("IP Address: " + ipAddress);
     }
 
-    @Test
-    public void testIpAddress() throws Exception {
-        InetAddress ipAddress = connection.getIPAddress();
-        assertThat(ipAddress, equalTo(InetAddress.getByAddress(new byte[]{(byte) 192, (byte) 168, (byte) 178, 25})));
-        System.out.println("IP Address: " + ipAddress);
-    }
 
     @Test
     public void testFirmewareVersion() throws Exception {

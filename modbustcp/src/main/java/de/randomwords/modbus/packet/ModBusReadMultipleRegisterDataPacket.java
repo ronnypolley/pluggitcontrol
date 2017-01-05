@@ -4,6 +4,7 @@ import de.randomwords.modbus.ModBusFunctionCodes;
 
 /**
  * Created by Ronny on 27.12.2016.
+ *
  */
 public abstract class ModBusReadMultipleRegisterDataPacket extends ModBusDataPacket {
 

@@ -5,6 +5,7 @@ import de.randomwords.modbus.exception.ModBusCommunicationException;
 import de.randomwords.pluggit.enums.AlarmType;
 import de.randomwords.pluggit.enums.OperationMode;
 import de.randomwords.pluggit.enums.PluggitRegisterAddress;
+import de.randomwords.pluggit.exception.PluggitControlException;
 import de.randomwords.pluggit.packets.PluggitReadRegister;
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -70,14 +71,16 @@ public class Connection {
         return new ModBusSyncTCPProtocolHandler(socket).getFromConnection(new PluggitReadRegister(address));
     }
 
-    public InetAddress getIPAddress() {
+    public InetAddress getIPAddress() throws PluggitControlException {
         try {
             byte[] response = getFromPluggit(PluggitRegisterAddress.IPAddress);
+            if (response.length < 13) {
+                throw new ModBusCommunicationException("Not all data needed was retrieved");
+            }
             return InetAddress.getByAddress(new byte[]{response[11], response[12], response[9], response[10]});
         } catch (IOException | ModBusCommunicationException e) {
-            e.printStackTrace();
+            throw new PluggitControlException("error getting ip address from pluggit", e);
         }
-        return null;
     }
 
 
