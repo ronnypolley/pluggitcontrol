@@ -18,6 +18,6 @@ public enum AlarmType {
     Supply5,
     Fire,
     Communication,
-    FireTermostat,
-    HighWaterlevel
+    FireThermostat,
+    HighWaterLevel
 }

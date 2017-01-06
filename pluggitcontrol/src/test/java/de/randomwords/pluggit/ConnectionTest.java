@@ -1,5 +1,6 @@
 package de.randomwords.pluggit;
 
+import de.randomwords.modbus.exception.ModBusCommunicationException;
 import de.randomwords.pluggit.enums.AlarmType;
 import de.randomwords.pluggit.enums.OperationMode;
 import de.randomwords.pluggit.exception.PluggitControlException;
@@ -15,6 +16,7 @@ import org.mockito.stubbing.Answer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.time.LocalDateTime;
@@ -85,7 +87,6 @@ public class ConnectionTest {
     @AfterEach
     void tearDown() {
         reset(socket);
-
     }
 
     @Test
@@ -95,10 +96,22 @@ public class ConnectionTest {
         });
         assertThat(throwable.getMessage(), equalTo("error getting ip address from pluggit"));
         assertThat(throwable.getCause().getMessage(), equalTo("Not all data needed was retrieved"));
-        //        assertThat(ipAddress, equalTo(InetAddress.getByAddress(new byte[]{(byte) 192, (byte) 168, (byte) 178, 25})));
-        //        System.out.println("IP Address: " + ipAddress);
     }
 
+    @Test
+    void testIpAddress_WithPayload() throws IOException, ModBusCommunicationException, PluggitControlException {
+        payloadLength = 4;
+        when(inputStream.read(any(byte[].class), eq(0), eq(4))).thenAnswer(new Answer<Integer>() {
+            @Override
+            public Integer answer(InvocationOnMock invocationOnMock) throws Throwable {
+                byte[] bytes = invocationOnMock.getArgumentAt(0, byte[].class);
+                bytes[0] = bytes[1] = bytes[2] = bytes[3] = 1;
+                return 1;
+            }
+        });
+        InetAddress ipAddress = connection.getIPAddress();
+        assertThat(ipAddress, equalTo(InetAddress.getByAddress(new byte[]{(byte) 1, (byte) 1, (byte) 1, 1})));
+    }
 
     @Test
     public void testFirmewareVersion() throws Exception {
