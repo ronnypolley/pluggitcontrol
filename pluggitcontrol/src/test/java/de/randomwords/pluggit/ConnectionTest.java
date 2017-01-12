@@ -4,7 +4,6 @@ import de.randomwords.modbus.exception.ModBusCommunicationException;
 import de.randomwords.pluggit.enums.AlarmType;
 import de.randomwords.pluggit.enums.OperationMode;
 import de.randomwords.pluggit.exception.PluggitControlException;
-import org.hamcrest.Matchers;
 import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,7 +23,10 @@ import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.lessThan;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
@@ -90,7 +92,7 @@ public class ConnectionTest {
     }
 
     @Test
-    public void testIpAddress_NoPayload() throws Exception {
+    public void testIpAddress_WithoutPayload() throws Exception {
         Throwable throwable = assertThrows(PluggitControlException.class, () -> {
             connection.getIPAddress();
         });
@@ -100,33 +102,65 @@ public class ConnectionTest {
 
     @Test
     void testIpAddress_WithPayload() throws IOException, ModBusCommunicationException, PluggitControlException {
-        payloadLength = 4;
-        when(inputStream.read(any(byte[].class), eq(0), eq(4))).thenAnswer(new Answer<Integer>() {
+        // payload consist of byte count and 4 bytes for the ip address
+        payloadLength = 5;
+        when(inputStream.read(any(byte[].class), eq(0), eq(5))).thenAnswer(new Answer<Integer>() {
             @Override
             public Integer answer(InvocationOnMock invocationOnMock) throws Throwable {
                 byte[] bytes = invocationOnMock.getArgumentAt(0, byte[].class);
-                bytes[0] = bytes[1] = bytes[2] = bytes[3] = 1;
+                // ip address
+                bytes[1] = bytes[2] = bytes[3] = bytes[4] = 1;
+                // byte count
+                bytes[0] = 4;
                 return 1;
             }
         });
-        InetAddress ipAddress = connection.getIPAddress();
-        assertThat(ipAddress, equalTo(InetAddress.getByAddress(new byte[]{(byte) 1, (byte) 1, (byte) 1, 1})));
+        assertThat(connection.getIPAddress(), equalTo(InetAddress.getByAddress(new byte[]{1, 1, 1, 1})));
     }
 
     @Test
-    public void testFirmewareVersion() throws Exception {
+    void testFirmwareVersion_WithoutPayload() {
+        Throwable throwable = assertThrows(PluggitControlException.class, () -> {
+            connection.getFirmwareVersion();
+        });
+        assertThat(throwable.getMessage(), equalTo("error getting firmware version"));
+        assertThat(throwable.getCause().getMessage(), equalTo("Not all data needed was retrieved"));
+    }
+
+    @Test
+    public void testFirmewareVersion_withPayload() throws Exception {
+        payloadLength = 3;
+        when(inputStream.read(any(byte[].class), eq(0), eq(3))).then(new Answer<Integer>() {
+            @Override
+            public Integer answer(InvocationOnMock invocationOnMock) throws Throwable {
+                byte[] bytes = invocationOnMock.getArgumentAt(0, byte[].class);
+                // firmware
+                bytes[0] = (byte) (payloadLength - 1);
+                bytes[1] = 2;
+                bytes[2] = 40;
+                return 1;
+            }
+        });
         Firmware firmwareVersion = connection.getFirmwareVersion();
-        System.out.println("Firmware version: " + firmwareVersion);
         assertThat(firmwareVersion.getMajorVersion(), equalTo(2));
         assertThat(firmwareVersion.getMinorVersion(), equalTo(40));
+    }
+
+    @Test
+    public void testCurrentDateTime_withoutPayload() throws Exception {
+        Throwable throwable = assertThrows(PluggitControlException.class, () -> {
+            connection.getCurrentDateTime();
+        });
+        assertThat(throwable.getMessage(), is(equalTo("error getting current datetime")));
+        assertThat(throwable.getCause().getMessage(), is(equalTo("Not all data needed was retrieved")));
     }
 
     @Test
     public void testCurrentDateTime() throws Exception {
         LocalDateTime currentDateTime = connection.getCurrentDateTime();
         System.out.println("Current date time: " + currentDateTime);
-        assertThat(currentDateTime, Matchers.lessThan(LocalDateTime.now(ZoneId.systemDefault()).plus(5, ChronoUnit.MINUTES)));
-        assertThat(currentDateTime, Matchers.greaterThan(LocalDateTime.now(ZoneId.systemDefault()).minus(5, ChronoUnit.MINUTES)));
+        assertThat(currentDateTime, lessThan(LocalDateTime.now(ZoneId.systemDefault()).plus(5, ChronoUnit.MINUTES)));
+        assertThat(currentDateTime, greaterThan(LocalDateTime.now(ZoneId.systemDefault()).minus(5, ChronoUnit.MINUTES)));
     }
 
     @Test
@@ -134,7 +168,7 @@ public class ConnectionTest {
         int worktime = connection.getWorktime();
         System.out.println("work time: " + worktime + " hours");
         System.out.println("work time: " + worktime / 24 + " days");
-        assertThat(worktime, Matchers.greaterThan(0));
+        assertThat(worktime, greaterThan(0));
     }
 
     @Test
@@ -176,7 +210,7 @@ public class ConnectionTest {
     public void testFilterRemainigTime() throws Exception {
         int filterTime = connection.getFilterRemainingTime();
         System.out.println("filter remaining time: " + filterTime);
-        assertThat(filterTime, Matchers.greaterThan(0));
+        assertThat(filterTime, greaterThan(0));
     }
 
     @Test
@@ -190,14 +224,14 @@ public class ConnectionTest {
     public void testFan1Speed() throws Exception {
         float fan1Speed = connection.getFan1Speed();
         System.out.println("fan 1 speed: " + fan1Speed);
-        assertThat(fan1Speed, Matchers.greaterThan(0.0f));
+        assertThat(fan1Speed, greaterThan(0.0f));
     }
 
     @Test
     public void testFan2Speed() throws Exception {
         float fan1Speed = connection.getFan2Speed();
         System.out.println("fan 2 speed: " + fan1Speed);
-        assertThat(fan1Speed, Matchers.greaterThan(0.0f));
+        assertThat(fan1Speed, greaterThan(0.0f));
     }
 
     @Test

@@ -84,14 +84,16 @@ public class Connection {
     }
 
 
-    public Firmware getFirmwareVersion() {
+    public Firmware getFirmwareVersion() throws PluggitControlException {
         try {
             byte[] response = getFromPluggit(PluggitRegisterAddress.Firmware);
-            return new Firmware(response[0], response[1]);
+            if (response.length < 11) {
+                throw new ModBusCommunicationException("Not all data needed was retrieved");
+            }
+            return new Firmware(response[response.length - 2], response[response.length - 1]);
         } catch (ModBusCommunicationException e) {
-            e.printStackTrace();
+            throw new PluggitControlException("error getting firmware version", e);
         }
-        return null;
     }
 
     public LocalDateTime getCurrentDateTime() {
