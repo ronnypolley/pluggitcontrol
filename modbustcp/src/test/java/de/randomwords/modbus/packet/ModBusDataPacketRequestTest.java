@@ -11,10 +11,10 @@ import static org.hamcrest.core.Is.is;
  *
  * @author Ronny Polley
  */
-class ModBusDataPacketTest {
+class ModBusDataPacketRequestTest {
     @Test
     void createArrayToSend() {
-        ModBusDataPacket modBusDataPacket = new ModBusDataPacket(111, 222) {
+        ModBusDataPacketRequest modBusDataPacketRequest = new ModBusDataPacketRequest(111, 222) {
             @Override
             public int getBaseAddress() {
                 return 0;
@@ -36,7 +36,7 @@ class ModBusDataPacketTest {
             }
         };
 
-        byte[] toSend = modBusDataPacket.createArrayToSend();
+        byte[] toSend = modBusDataPacketRequest.createArrayToSend();
         byte[] expected = new byte[]{0, (byte) 222, 0, 0, 0, 6, 0, 0, 0, (byte) 111, 1, 2};
         assertThat(toSend, is(equalTo(expected)));
 

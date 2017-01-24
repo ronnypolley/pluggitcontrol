@@ -6,7 +6,7 @@ import java.util.Random;
 /**
  * Created by Ronny on 27.12.2016.
  */
-public abstract class ModBusDataPacket {
+public abstract class ModBusDataPacketRequest {
 
     private static final Random rnd = new Random(System.currentTimeMillis());
 
@@ -14,11 +14,11 @@ public abstract class ModBusDataPacket {
 
     private int transactionId;
 
-    public ModBusDataPacket(int address) {
+    public ModBusDataPacketRequest(int address) {
         this(address, rnd.nextInt());
     }
 
-    public ModBusDataPacket(int address, int transactionId) {
+    public ModBusDataPacketRequest(int address, int transactionId) {
         this.address = address;
         this.transactionId = transactionId;
     }

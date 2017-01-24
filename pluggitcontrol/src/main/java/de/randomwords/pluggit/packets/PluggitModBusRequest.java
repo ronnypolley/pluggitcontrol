@@ -1,15 +1,15 @@
 package de.randomwords.pluggit.packets;
 
-import de.randomwords.modbus.packet.ModBusReadMultipleRegisterDataPacket;
+import de.randomwords.modbus.packet.ModBusReadMultipleRegisterDataPacketRequest;
 
 /**
  * Created by Ronny Polley on 28.12.2016.
  */
-public abstract class PluggitModBus extends ModBusReadMultipleRegisterDataPacket {
+public abstract class PluggitModBusRequest extends ModBusReadMultipleRegisterDataPacketRequest {
 
     public static final int BASE_ADDRESS = 40001;
 
-    public PluggitModBus(int address) {
+    public PluggitModBusRequest(int address) {
         super(address);
     }
 

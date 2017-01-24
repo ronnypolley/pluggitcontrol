@@ -5,9 +5,9 @@ import de.randomwords.modbus.ModBusFunctionCodes;
 /**
  * Created by Ronny on 27.12.2016.
  */
-public abstract class ModBusWriteMultipleRegisterDataPacket extends ModBusDataPacket {
+public abstract class ModBusWriteMultipleRegisterDataPacketRequest extends ModBusDataPacketRequest {
 
-    public ModBusWriteMultipleRegisterDataPacket(int address) {
+    public ModBusWriteMultipleRegisterDataPacketRequest(int address) {
         super(address);
     }
 

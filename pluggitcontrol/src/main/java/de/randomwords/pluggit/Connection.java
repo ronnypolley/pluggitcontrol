@@ -1,12 +1,10 @@
 package de.randomwords.pluggit;
 
-import de.randomwords.modbus.ModBusSyncTCPProtocolHandler;
 import de.randomwords.modbus.exception.ModBusCommunicationException;
 import de.randomwords.pluggit.enums.AlarmType;
 import de.randomwords.pluggit.enums.OperationMode;
 import de.randomwords.pluggit.enums.PluggitRegisterAddress;
 import de.randomwords.pluggit.exception.PluggitControlException;
-import de.randomwords.pluggit.packets.PluggitReadRegister;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.io.BufferedOutputStream;
@@ -68,7 +66,8 @@ public class Connection {
     }
 
     protected byte[] getFromPluggit(PluggitRegisterAddress address) throws ModBusCommunicationException {
-        return new ModBusSyncTCPProtocolHandler(socket).getFromConnection(new PluggitReadRegister(address));
+        //        return new ModBusSyncTCPProtocolHandler(socket).getFromConnection(new PluggitReadRegister(address));
+        return null;
     }
 
     public InetAddress getIPAddress() throws PluggitControlException {
@@ -98,18 +97,17 @@ public class Connection {
 
     public LocalDateTime getCurrentDateTime() {
         try {
-            sendToPluggit(PluggitRegisterAddress.CurrentDateTime.getPmr());
+            byte[] bytes = getFromPluggit(PluggitRegisterAddress.CurrentDateTime);
 
-            DataInputStream dataInputStream = new DataInputStream(socket.getInputStream());
-            while (dataInputStream.readByte() != (byte) 4) {
-                // do nothing, skip unnecessary modbus code here
+            if (bytes.length < 13) {
+                throw new ModBusCommunicationException("Not allö data needed was retrieved");
             }
 
-            int a = dataInputStream.readShort();
-            int b = dataInputStream.readShort();
+            int a = ByteBuffer.wrap(bytes, 10, 2).getShort();
+            int b = ByteBuffer.wrap(bytes, 12, 2).getShort();
 
             return LocalDateTime.ofInstant(Instant.ofEpochMilli(((long) (a & 0xFFFF | b << 16)) * 1000), ZoneId.of("UTC"));
-        } catch (IOException e) {
+        } catch (ModBusCommunicationException e) {
             e.printStackTrace();
         }
         return null;

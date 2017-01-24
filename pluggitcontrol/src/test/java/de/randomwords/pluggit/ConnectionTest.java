@@ -22,12 +22,14 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 
+import static java.time.Duration.ofMillis;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.lessThan;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.mockito.Mockito.*;
 
 /**
@@ -149,7 +151,9 @@ public class ConnectionTest {
     @Test
     public void testCurrentDateTime_withoutPayload() throws Exception {
         Throwable throwable = assertThrows(PluggitControlException.class, () -> {
-            connection.getCurrentDateTime();
+            assertTimeoutPreemptively(ofMillis(100), () -> {
+                connection.getCurrentDateTime();
+            });
         });
         assertThat(throwable.getMessage(), is(equalTo("error getting current datetime")));
         assertThat(throwable.getCause().getMessage(), is(equalTo("Not all data needed was retrieved")));

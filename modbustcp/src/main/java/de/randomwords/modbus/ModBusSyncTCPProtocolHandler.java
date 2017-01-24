@@ -1,7 +1,8 @@
 package de.randomwords.modbus;
 
 import de.randomwords.modbus.exception.ModBusCommunicationException;
-import de.randomwords.modbus.packet.ModBusDataPacket;
+import de.randomwords.modbus.packet.ModBusDataPacketRequest;
+import de.randomwords.modbus.packet.ModBusDataPacketResponse;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,7 +20,7 @@ import java.util.Arrays;
  */
 public class ModBusSyncTCPProtocolHandler {
 
-    private static final Logger logger = LogManager.getLogger(ModBusDataPacket.class);
+    private static final Logger logger = LogManager.getLogger(ModBusSyncTCPProtocolHandler.class);
 
     private Socket modbusSocket;
 
@@ -27,8 +28,9 @@ public class ModBusSyncTCPProtocolHandler {
         this.modbusSocket = modbusSocket;
     }
 
-    public byte[] getFromConnection(ModBusDataPacket dataPacket) throws ModBusCommunicationException {
+    public <T> ModBusDataPacketResponse<T> getFromConnection(ModBusDataPacketRequest dataPacket) throws ModBusCommunicationException {
         try (BufferedOutputStream outputStream = new BufferedOutputStream(modbusSocket.getOutputStream())) {
+            logger.error("request " + Arrays.toString(dataPacket.createArrayToSend()));
             outputStream.write(dataPacket.createArrayToSend());
             outputStream.flush();
             return getResponse(dataPacket.getTransactionId());
@@ -38,10 +40,10 @@ public class ModBusSyncTCPProtocolHandler {
         }
     }
 
-    private byte[] getResponse(int transactionId) throws ModBusCommunicationException {
+    private <T> ModBusDataPacketResponse<T> getResponse(int transactionId) throws ModBusCommunicationException {
         try (DataInputStream dataInputStream = new DataInputStream(modbusSocket.getInputStream())) {
             // read header
-            byte[] header = new byte[8];
+            byte[] header = new byte[6];
             dataInputStream.read(header);
 
             if (header[0] != (byte) (transactionId >> 8) || header[1] != (byte) (transactionId & 255)) {
@@ -55,7 +57,13 @@ public class ModBusSyncTCPProtocolHandler {
             byte[] payload = new byte[header[5]];
             dataInputStream.read(payload);
 
-            return ArrayUtils.addAll(header, payload);
+            logger.error("response" + Arrays.toString(ArrayUtils.addAll(header, payload)));
+            return new ModBusDataPacketResponse<T>(header, payload) {
+                @Override
+                public T getValue() {
+                    return null;
+                }
+            };
         } catch (IOException e) {
             logger.error("error communicating with modbus master on {} trying to get a response", modbusSocket);
             throw new ModBusCommunicationException("error communicating with modbus master", e);

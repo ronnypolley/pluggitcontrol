@@ -12,7 +12,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 class ModBusWriteMultipleRegisterDataPacketTest {
     @Test
     void getFunctionCode() {
-        assertThat(new ModBusWriteMultipleRegisterDataPacket(0) {
+        assertThat(new ModBusWriteMultipleRegisterDataPacketRequest(0) {
             @Override
             public int getBaseAddress() {
                 return 0;

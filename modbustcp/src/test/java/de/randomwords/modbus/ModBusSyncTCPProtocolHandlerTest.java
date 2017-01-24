@@ -1,7 +1,7 @@
 package de.randomwords.modbus;
 
 import de.randomwords.modbus.exception.ModBusCommunicationException;
-import de.randomwords.modbus.packet.ModBusDataPacket;
+import de.randomwords.modbus.packet.ModBusDataPacketRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Answers;
@@ -29,7 +29,7 @@ class ModBusSyncTCPProtocolHandlerTest {
     private Socket socket;
 
     @Mock(answer = Answers.RETURNS_DEEP_STUBS)
-    private ModBusDataPacket dataPacket;
+    private ModBusDataPacketRequest dataPacket;
 
     @BeforeEach
     void setUp() {
