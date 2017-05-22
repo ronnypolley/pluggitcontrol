@@ -1,7 +1,20 @@
-node {
-    stage ('Build') {
-        withMaven(jdk: "SunJDK8", maven: "Maven 3.3.9", mavenLocalRepo: "$WORKSPACE/.repository"){
-            sh 'cd ../*@script && mvn clean install'
+pipeline {
+    agent any
+
+    stages {
+        stage ('build') {
+            steps {
+                withMaven (mavenLocalRepo: ".repository") {
+                    sh 'mvn clean install'
+                }
+            }
+        }
+
+        stage ('archive') {
+            steps {
+                archive '**/target/**/*'
+                junit '*/target/surefire-reports/*.xml'
+            }
         }
     }
 }
