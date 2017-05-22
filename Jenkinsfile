@@ -25,7 +25,9 @@ pipeline {
         stage ('sonar analysis') {
             steps {
                 withSonarQubeEnv('Random Words') {
-                    sh 'mvn sonar:sonar'
+                    withMaven(maven: 'Maven 3.3.9', jdk: 'SunJDK8', mavenLocalRepo: ".repository"){
+                        sh 'mvn sonar:sonar'
+                    }
                 }
             }
         }
