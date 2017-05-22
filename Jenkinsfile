@@ -21,5 +21,13 @@ pipeline {
                 junit '*/target/surefire-reports/*.xml'
             }
         }
+
+        stage ('sonar analysis') {
+            steps {
+                withSonarEnv('Random Words') {
+                    sh 'mvn sonar:sonar'
+                }
+            }
+        }
     }
 }
