@@ -7,8 +7,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -72,18 +70,19 @@ class ModBusSyncTCPProtocolHandlerTest {
     @Test
     void getFromConnection_RunThrough() throws IOException, ModBusCommunicationException {
         InputStream inputStream = mock(InputStream.class, Answers.RETURNS_DEEP_STUBS);
-        when(inputStream.read(any(byte[].class), eq(0), eq(8))).thenAnswer(new Answer<Integer>() {
-            @Override
-            public Integer answer(InvocationOnMock invocationOnMock) throws Throwable {
-                byte[] header = invocationOnMock.getArgumentAt(0, byte[].class);
-                header[1] = 1;
-                header[5] = 1;
-                return 1;
-            }
+        when(inputStream.read(any(byte[].class), eq(0), eq(8))).thenAnswer(invocationOnMock -> {
+            byte[] header = invocationOnMock.getArgumentAt(0, byte[].class);
+            header[1] = 1;
+            header[5] = 1;
+            return 2;
         });
+        // generate an empty payload
+        when(inputStream.read(any(byte[].class), eq(0), eq(1))).thenAnswer(invocationOnMock -> 1);
         when(socket.getInputStream()).thenReturn(inputStream);
         when(dataPacket.getTransactionId()).thenReturn(1);
+
         byte[] connection = new ModBusSyncTCPProtocolHandler(socket).getFromConnection(dataPacket);
+
         assertThat(connection.length, is(equalTo(9)));
         assertThat(connection[1], is(equalTo((byte) 1)));
 
