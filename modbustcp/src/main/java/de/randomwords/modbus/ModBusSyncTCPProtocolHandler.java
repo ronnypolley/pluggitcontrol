@@ -42,9 +42,9 @@ public class ModBusSyncTCPProtocolHandler {
         try (DataInputStream dataInputStream = new DataInputStream(modbusSocket.getInputStream())) {
             // read header
             byte[] header = new byte[8];
-            dataInputStream.read(header);
+            int bytesRead = dataInputStream.read(header);
 
-            if (header[0] != (byte) (transactionId >> 8) || header[1] != (byte) (transactionId & 255)) {
+            if (bytesRead > 0 && header[0] != (byte) (transactionId >> 8) || header[1] != (byte) (transactionId & 255)) {
                 logger.debug("The transactionId of the found response ({}) does not match the sent one ({})", Arrays.copyOfRange(header, 0, 1), transactionId);
                 throw new ModBusCommunicationException("TransactionId does not match");
             }
@@ -53,7 +53,9 @@ public class ModBusSyncTCPProtocolHandler {
             // TODO: check other parameters
 
             byte[] payload = new byte[header[5]];
-            dataInputStream.read(payload);
+            if (dataInputStream.read(payload) <= 0) {
+                return new byte[]{};
+            }
 
             return ArrayUtils.addAll(header, payload);
         } catch (IOException e) {

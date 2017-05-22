@@ -7,6 +7,8 @@ import de.randomwords.pluggit.enums.OperationMode;
 import de.randomwords.pluggit.enums.PluggitRegisterAddress;
 import de.randomwords.pluggit.packets.PluggitReadRegister;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
@@ -23,6 +25,9 @@ import java.time.ZoneId;
  * Created by Ronny on 09.12.2016.
  */
 public class Connection {
+
+    private static final Logger LOGGER = LogManager.getLogger(Connection.class);
+    public static final String ERROR_COMMUNICATING = "error communicating";
 
     private Socket socket;
 
@@ -63,7 +68,7 @@ public class Connection {
     }
 
     protected byte[] sendToPluggit(PluggitRegisterAddress address, byte[] payload) {
-        return null;
+        return new byte[]{};
     }
 
     protected byte[] getFromPluggit(PluggitRegisterAddress address) throws ModBusCommunicationException {
@@ -75,7 +80,7 @@ public class Connection {
             byte[] response = getFromPluggit(PluggitRegisterAddress.IPAddress);
             return InetAddress.getByAddress(new byte[]{response[11], response[12], response[9], response[10]});
         } catch (IOException | ModBusCommunicationException e) {
-            e.printStackTrace();
+            LOGGER.error(ERROR_COMMUNICATING, e);
         }
         return null;
     }
@@ -86,7 +91,7 @@ public class Connection {
             byte[] response = getFromPluggit(PluggitRegisterAddress.Firmware);
             return new Firmware(response[0], response[1]);
         } catch (ModBusCommunicationException e) {
-            e.printStackTrace();
+            LOGGER.error(ERROR_COMMUNICATING, e);
         }
         return null;
     }
@@ -105,7 +110,7 @@ public class Connection {
 
             return LocalDateTime.ofInstant(Instant.ofEpochMilli(((long) (a & 0xFFFF | b << 16)) * 1000), ZoneId.of("UTC"));
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error(ERROR_COMMUNICATING, e);
         }
         return null;
     }
@@ -124,7 +129,7 @@ public class Connection {
 
             return (a | b << 16);
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error(ERROR_COMMUNICATING, e);
         }
         return 0;
     }
@@ -142,7 +147,7 @@ public class Connection {
 
             return OperationMode.values()[a];
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error(ERROR_COMMUNICATING, e);
         }
         return null;
     }
@@ -163,7 +168,7 @@ public class Connection {
             return ByteBuffer.wrap(new byte[]{a, b, c, d}).getFloat();
 
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error(ERROR_COMMUNICATING, e);
         }
         return 0.0f;
     }
@@ -184,7 +189,7 @@ public class Connection {
             return ByteBuffer.wrap(new byte[]{a, b, c, d}).getFloat();
 
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error(ERROR_COMMUNICATING, e);
         }
         return 0.0f;
     }
@@ -205,7 +210,7 @@ public class Connection {
             return ByteBuffer.wrap(new byte[]{a, b, c, d}).getFloat();
 
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error(ERROR_COMMUNICATING, e);
         }
         return 0.0f;
     }
@@ -226,7 +231,7 @@ public class Connection {
             return ByteBuffer.wrap(new byte[]{a, b, c, d}).getFloat();
 
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error(ERROR_COMMUNICATING, e);
         }
         return 0.0f;
     }
@@ -244,7 +249,7 @@ public class Connection {
 
             return (a | b << 16);
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error(ERROR_COMMUNICATING, e);
         }
         return 0;
     }
@@ -262,7 +267,7 @@ public class Connection {
 
             return AlarmType.values()[(a | b << 16)];
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error(ERROR_COMMUNICATING, e);
         }
         return AlarmType.None;
     }
@@ -283,7 +288,7 @@ public class Connection {
             return ByteBuffer.wrap(new byte[]{a, b, c, d}).getFloat();
 
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error(ERROR_COMMUNICATING, e);
         }
         return 0.0f;
     }
@@ -304,7 +309,7 @@ public class Connection {
             return ByteBuffer.wrap(new byte[]{a, b, c, d}).getFloat();
 
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error(ERROR_COMMUNICATING, e);
         }
         return 0.0f;
     }
@@ -314,7 +319,7 @@ public class Connection {
             byte[] bytes = ByteBuffer.allocate(4).putInt(ventilationLevel).array();
             sendToPluggit(40325, new byte[]{bytes[2], bytes[3], bytes[0], bytes[1]}, false);
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error(ERROR_COMMUNICATING, e);
         }
     }
 }
