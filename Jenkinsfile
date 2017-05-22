@@ -24,7 +24,7 @@ pipeline {
 
         stage ('sonar analysis') {
             steps {
-                withSonarEnv('Random Words') {
+                withSonarQubeEnv('Random Words') {
                     sh 'mvn sonar:sonar'
                 }
             }
