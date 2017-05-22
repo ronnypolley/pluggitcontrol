@@ -9,7 +9,7 @@ pipeline {
     stages {
         stage ('build') {
             steps {
-                withMaven (mavenLocalRepo: ".repository") {
+                withMaven (maven: 'Maven 3.3.9', jdk: 'SunJDK8', mavenLocalRepo: ".repository") {
                     sh 'mvn clean install'
                 }
             }
